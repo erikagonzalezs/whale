@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.taller3">
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!--
+      The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
+      Google Maps Android API v2, but you must specify either coarse or fine
+      location permissions for the "MyLocation" functionality.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/whale_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/whale_icon"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Taller3">
+        <activity android:name=".UsersActivity"></activity>
+        <activity android:name=".HomeActivity" />
+        <activity android:name=".SingupActivity" />
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
