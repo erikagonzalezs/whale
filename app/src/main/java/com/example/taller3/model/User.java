@@ -4,11 +4,28 @@ public class User {
     String nombre;
     String apellido;
     String identificacion;
-
     boolean estado;
+    double latitud;
+    double longit;
 
     public User() {
         estado = true;
+    }
+
+    public double getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(double latitud) {
+        this.latitud = latitud;
+    }
+
+    public double getLongit() {
+        return longit;
+    }
+
+    public void setLongit(double longit) {
+        this.longit = longit;
     }
 
     public void setEstado(boolean estado) {

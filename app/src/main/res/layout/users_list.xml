@@ -11,7 +11,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_weight="0.2"
-         />
+        />
 
     <TextView
         android:id="@+id/nameContact"
@@ -20,7 +20,8 @@
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.7"
         android:fontFamily="@font/roboto_bold"
-        android:textColor="@color/black" />
+        android:textColor="@color/black"
+        android:textSize="27sp" />
 
     <TextView
         android:id="@+id/lastName"
@@ -29,17 +30,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.7"
         android:fontFamily="@font/roboto_bold"
-        android:textColor="@color/black" />
+        android:textColor="@color/black"
+        android:textSize="27sp" />
 
-    <Button
-        android:id="@+id/btnSeeRoute"
-        android:layout_width="wrap_content"
-        android:layout_height="30sp"
-        android:layout_gravity="center_horizontal"
-        android:layout_weight="0.2"
-        android:background="@drawable/button_style"
-        android:fontFamily="@font/roboto_bold"
-        android:gravity="center_horizontal"
-        android:text="LOCALIZAR"
-        android:textSize="8sp" />
 </LinearLayout>

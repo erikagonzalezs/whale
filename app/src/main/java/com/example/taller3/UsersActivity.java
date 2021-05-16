@@ -1,8 +1,10 @@
 package com.example.taller3;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 
 import android.graphics.drawable.BitmapDrawable;
@@ -12,6 +14,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -45,7 +49,7 @@ import com.google.firebase.storage.UploadTask;
 
 import static com.example.taller3.utils.References.PATH_USERS;
 
-public class UsersActivity extends ListActivity {
+public class UsersActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     //auth
     private FirebaseAuth mAuth;
@@ -76,6 +80,8 @@ public class UsersActivity extends ListActivity {
 
         //inflate
         listUsers = findViewById(android.R.id.list);
+        listUsers.setOnItemClickListener(this);
+
         mLista = new ArrayList<Modelo>();
         mAdapter = new ListAdapter(getApplicationContext(), R.layout.users_list, mLista);
         listUsers.setAdapter(mAdapter);
@@ -92,21 +98,33 @@ public class UsersActivity extends ListActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 mLista.clear();
+                mAdapter.clear();
+                mAdapter.notifyDataSetChanged();
                 for (DataSnapshot single : snapshot.getChildren()) {
                     User user = single.getValue(User.class);
                     if (user.getEstado() && !single.getKey().equals(currentUser.getUid())) {
                         String link = (PATH_USERS + "profile_pictures/" + single.getKey() + ".jpg");
-                        modelo = new Modelo(user.getNombre(), user.getApellido(), link);
+                        modelo = new Modelo(user.getNombre(), user.getApellido(), link, single.getKey());
                         mLista.add(modelo);
                         mAdapter.notifyDataSetChanged();
                     }
                 }
             }
-
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
+            public void onCancelled(@NonNull DatabaseError error)
+            {
             }
         });
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Intent intent = new Intent(this, InfoActivity.class);
+        Bundle extras = new Bundle();
+        extras.putString("nombre", mAdapter.getItem(position).getNombre());
+        extras.putString("apellido", mAdapter.getItem(position).getApellido());
+        extras.putString("Id",mAdapter.getItem(position).getId());
+        intent.putExtras(extras);
+        startActivity(intent);
     }
 }

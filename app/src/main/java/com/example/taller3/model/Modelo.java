@@ -8,6 +8,15 @@ public class Modelo {
     private String apellido;
     private ImageView imagen;
     private String url;
+    private String Id;
+
+    public String getId() {
+        return Id;
+    }
+
+    public void setId(String id) {
+        Id = id;
+    }
 
     public String getUrl() {
         return url;
@@ -20,10 +29,11 @@ public class Modelo {
     public Modelo() {
     }
 
-    public Modelo(String nombre, String apellido, String url) {
+    public Modelo(String nombre, String apellido, String url, String id) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.url = url;
+        this.Id = id;
     }
 
     public Modelo(String nombre, String apellido, ImageView imagen) {
