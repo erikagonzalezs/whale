@@ -45,6 +45,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -92,93 +93,100 @@ public class InfoActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        friendcount = 0;
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_info);
-        nombre = findViewById(R.id.tvInfoName);
-        apellido = findViewById(R.id.tvInfoLastName);
-        distancia = findViewById(R.id.tvDistance);
-        friendU = new User();
-        currentUser = new User();
-        //--------
-        //database
-        dataBase = FirebaseDatabase.getInstance();
-        //auth
-        mAuth = FirebaseAuth.getInstance();
-        //storage
-        strg_instancia = FirebaseStorage.getInstance();
-        storage = FirebaseStorage.getInstance().getReference();
-        friendref = FirebaseDatabase.getInstance().getReference();
-        myRef = dataBase.getReference();
-        //ubicación usuario principal
-        locationRequest = LocationManager.createLocationRequest();
-        locationClient = LocationServices.getFusedLocationProviderClient(this);
+            friendcount = 0;
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_info);
+            nombre = findViewById(R.id.tvInfoName);
+            apellido = findViewById(R.id.tvInfoLastName);
+            distancia = findViewById(R.id.tvDistance);
+            friendU = new User();
+            currentUser = new User();
+            //--------
+            //database
+            dataBase = FirebaseDatabase.getInstance();
+            //auth
+            mAuth = FirebaseAuth.getInstance();
+            //storage
+            strg_instancia = FirebaseStorage.getInstance();
+            storage = FirebaseStorage.getInstance().getReference();
+            friendref = FirebaseDatabase.getInstance().getReference();
+            myRef = dataBase.getReference();
+            //ubicación usuario principal
+            locationRequest = LocationManager.createLocationRequest();
+            locationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        //-----------------------------
-        Intent intent = getIntent();
-        Bundle extras = intent.getExtras();
-        id = extras.getString("Id");
-        nombre.setText(extras.getString("nombre"));
-        apellido.setText(extras.getString("apellido"));
-        Log.i("friendId", id);
+            //-----------------------------
+            Intent intent = getIntent();
+            Bundle extras = intent.getExtras();
+            id = extras.getString("Id");
+            nombre.setText(extras.getString("nombre"));
+            apellido.setText(extras.getString("apellido"));
+            Log.i("friendId", id);
 
-        myRef.child(References.PATH_USERS).child(id).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-                if (!task.isSuccessful()) {
-                    Log.i("Firebase", "Error getting data", task.getException());
-                } else {
-                    friendU = task.getResult().getValue(User.class);
-                }
-            }
-        });
-        Log.i(String.valueOf(friendU.getLatitud()), String.valueOf(friendU.getLongit()));
-        myRef.child(References.PATH_USERS).child(mAuth.getUid()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
-
-                if (!task.isSuccessful()) {
-                    Log.i("Firebase", "Error getting data", task.getException());
-                } else {
-                    currentUser = task.getResult().getValue(User.class);
-                }
-            }
-        });
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(@NonNull LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-                Location location = locationResult.getLastLocation();
-                if (location != null) {
-                    if (currentposition != null) {
-                        currentposition.remove();
-                    }
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                    currentUser.setLatitud(latLng.latitude);
-                    currentUser.setLongit(latLng.longitude);
-                    myRef = dataBase.getReference(References.PATH_USERS + mAuth.getUid() + "/latitud");
-                    myRef.setValue(currentUser.getLatitud());
-                    myRef = dataBase.getReference(References.PATH_USERS + mAuth.getUid() + "/longit");
-                    myRef.setValue(currentUser.getLongit());
-                    userLocation = location;
-                    currentposition = mMap.addMarker(new MarkerOptions().
-                            position(latLng).title("Tu ubicación :" + LocationManager.geocoderSearch(latLng, geocoder)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-                    if (friendU.getLatitud() != 0.0 && friendU.getLongit() != 0.0) {
-                        double distanc = distance(friendU.getLatitud(), friendU.getLongit(), currentUser.getLatitud(), currentUser.getLongit());
-                        distancia.setText(Double.toString(distanc) + " KM");
+        if (mAuth.getUid() != null) {
+            myRef.child(References.PATH_USERS).child(id).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
+                    if (!task.isSuccessful()) {
+                        Log.i("Firebase", "Error getting data", task.getException());
+                    } else {
+                        friendU = task.getResult().getValue(User.class);
                     }
                 }
-            }
-        };
-        PermissionManager.request_permission(this, LOCATION_NAME, "se requiere acceder a su ubicación", LOCATION_PERMISSION_ID);
-        initView();
+            });
+            Log.i(String.valueOf(friendU.getLatitud()), String.valueOf(friendU.getLongit()));
+            myRef.child(References.PATH_USERS).child(mAuth.getUid()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DataSnapshot> task) {
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        geocoder = new Geocoder(this);
-        subscribeToChange();
+                    if (!task.isSuccessful()) {
+                        Log.i("Firebase", "Error getting data", task.getException());
+                    } else {
+                        currentUser = task.getResult().getValue(User.class);
+                    }
+                }
+            });
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(@NonNull LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+                    Location location = locationResult.getLastLocation();
+                    if (location != null) {
+                        if (currentposition != null) {
+                            currentposition.remove();
+                        }
+                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        currentUser.setLatitud(latLng.latitude);
+                        currentUser.setLongit(latLng.longitude);
+                        myRef = dataBase.getReference(References.PATH_USERS + mAuth.getUid() + "/latitud");
+                        myRef.setValue(currentUser.getLatitud());
+                        myRef = dataBase.getReference(References.PATH_USERS + mAuth.getUid() + "/longit");
+                        myRef.setValue(currentUser.getLongit());
+                        userLocation = location;
+                        currentposition = mMap.addMarker(new MarkerOptions().
+                                position(latLng).title("Tu ubicación :" + LocationManager.geocoderSearch(latLng, geocoder)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                        if (friendU.getLatitud() != 0.0 && friendU.getLongit() != 0.0) {
+                            double distanc = distance(friendU.getLatitud(), friendU.getLongit(), currentUser.getLatitud(), currentUser.getLongit());
+                            distancia.setText(Double.toString(distanc) + " KM");
+                        }
+                    }
+                }
+            };
+            PermissionManager.request_permission(this, LOCATION_NAME, "se requiere acceder a su ubicación", LOCATION_PERMISSION_ID);
+            initView();
+
+            // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+            geocoder = new Geocoder(this);
+            subscribeToChange();
+        } else {
+            Intent intent2 = new Intent(getBaseContext(), LoginActivity.class);
+            //intent2.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent2);
+        }
+
     }
 
     @Override
@@ -252,14 +260,8 @@ public class InfoActivity extends FragmentActivity implements OnMapReadyCallback
                         double distanc = distance(latLng.latitude, latLng.longitude, currentUser.getLatitud(), currentUser.getLongit());
                         distancia.setText(Double.toString(distanc) + " KM");
                     }
-
-
+                } else {
                 }
-                else
-                {
-
-                }
-
 
             }
 
@@ -286,7 +288,9 @@ public class InfoActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        startLocationUpdates();
+        if(mAuth.getUid() != null){
+            startLocationUpdates();
+        }
     }
 
     /**
@@ -310,6 +314,20 @@ public class InfoActivity extends FragmentActivity implements OnMapReadyCallback
             friendMark = mMap.addMarker(new MarkerOptions().position(friend).title("ubicación de " + friendU.getNombre() + " : " + LocationManager.geocoderSearch(friend, geocoder)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(friend, 13));
         }
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        updateUI(currentUser);
+    }
+
+    private void updateUI(FirebaseUser currentUser) {
+        if (currentUser == null) {
+            Intent intent = new Intent(getBaseContext(), LoginActivity.class);
+            //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        }
     }
 }

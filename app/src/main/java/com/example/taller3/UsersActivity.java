@@ -4,11 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ListActivity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
 
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +28,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.taller3.model.Modelo;
 import com.example.taller3.model.User;
+import com.example.taller3.services.ListenerService;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -50,6 +54,8 @@ import com.google.firebase.storage.UploadTask;
 import static com.example.taller3.utils.References.PATH_USERS;
 
 public class UsersActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+    //log
+    public static final String TAG = "USERS_APP";
 
     //auth
     private FirebaseAuth mAuth;
@@ -65,6 +71,7 @@ public class UsersActivity extends AppCompatActivity implements AdapterView.OnIt
     FirebaseDatabase dataBase;
     DatabaseReference myRef;
     FirebaseStorage strg_instancia;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +92,6 @@ public class UsersActivity extends AppCompatActivity implements AdapterView.OnIt
         mLista = new ArrayList<Modelo>();
         mAdapter = new ListAdapter(getApplicationContext(), R.layout.users_list, mLista);
         listUsers.setAdapter(mAdapter);
-
 
         subscribeToChange();
     }
@@ -111,8 +117,7 @@ public class UsersActivity extends AppCompatActivity implements AdapterView.OnIt
                 }
             }
             @Override
-            public void onCancelled(@NonNull DatabaseError error)
-            {
+            public void onCancelled(@NonNull DatabaseError error){
             }
         });
     }
@@ -123,8 +128,14 @@ public class UsersActivity extends AppCompatActivity implements AdapterView.OnIt
         Bundle extras = new Bundle();
         extras.putString("nombre", mAdapter.getItem(position).getNombre());
         extras.putString("apellido", mAdapter.getItem(position).getApellido());
-        extras.putString("Id",mAdapter.getItem(position).getId());
+        extras.putString("Id", mAdapter.getItem(position).getId());
         intent.putExtras(extras);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        subscribeToChange();
     }
 }
