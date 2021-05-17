@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Whale</string>
+    <string name="title_activity_home2">Map</string>
+    <string name="title_activity_info">Map</string>
 </resources>

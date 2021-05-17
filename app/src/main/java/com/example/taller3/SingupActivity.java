@@ -2,12 +2,16 @@ package com.example.taller3;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,6 +24,19 @@ import android.widget.Toast;
 import com.example.taller3.utils.PermissionManager;
 import com.example.taller3.model.User;
 import com.example.taller3.utils.References;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -70,6 +87,12 @@ public class SingupActivity extends AppCompatActivity {
     EditText correo;
     EditText contrasena;
     EditText identificacion;
+    //location
+    private FusedLocationProviderClient locationCliente;
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+    private Location userLocation;
+
 
 
     @Override
@@ -89,6 +112,24 @@ public class SingupActivity extends AppCompatActivity {
         btnTakeProfileIcon = findViewById(R.id.btnTakeProfileIcon);
         btnRegister = findViewById(R.id.btnRegister);
 
+        //location
+        locationRequest = createLocationRequest();
+        locationCliente = LocationServices.getFusedLocationProviderClient(this);
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                Location location = locationResult.getLastLocation();
+                if(location!=null)
+                {
+                    LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
+                    userLocation = location;
+                }
+            }
+        };
+            PermissionManager.request_permission(this, MAPS_NAME,"Se requiere acceder a la ubicación",MAPS_PERMISSION_ID);
+            initView();
+        //-------
         nombre = findViewById(R.id.etName);
         apellido = findViewById(R.id.etApellido);
         correo = findViewById(R.id.etRegisterCorreo);
@@ -101,6 +142,74 @@ public class SingupActivity extends AppCompatActivity {
                 maps(v);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startLocationUpdates();
+
+    }
+
+    private void initView() {
+        if(ContextCompat.checkSelfPermission(this,MAPS_NAME)== PackageManager.PERMISSION_GRANTED)
+        {
+            checkSettingsLocation();
+        }
+    }
+    private void checkSettingsLocation()
+    {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        //si el gps está on, inicia el uso del gps
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                startLocationUpdates();
+            }
+        });
+        //si el gps no está on, intente resolverlo
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                int statusCode=((ApiException)e).getStatusCode();
+                switch (statusCode)
+                {
+                    case CommonStatusCodes
+                            .RESOLUTION_REQUIRED://GPS APAGADO PERO SE PUEDE ENCENDER PROGRAMATICAMENTE
+                        try{
+                            ResolvableApiException resolvable =(ResolvableApiException)e;
+                            resolvable.startResolutionForResult(SingupActivity.this,MAPS_PERMISSION_ID);
+                        }catch (IntentSender.SendIntentException sendex)
+                        {
+                        }
+                        break;
+                    case LocationSettingsStatusCodes
+                            .SETTINGS_CHANGE_UNAVAILABLE:
+                        Toast.makeText(SingupActivity.this,"El gps no funciona correctamente",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+
+    //----------------
+    private void startLocationUpdates()
+    {
+        if(ContextCompat.checkSelfPermission(this,MAPS_NAME)==PackageManager.PERMISSION_GRANTED)
+        {
+            locationCliente.requestLocationUpdates(locationRequest,locationCallback,null);
+        }
+    }
+
+
+    private LocationRequest createLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        return locationRequest;
     }
 
     public void maps(View view){
@@ -215,6 +324,8 @@ public class SingupActivity extends AppCompatActivity {
                         nUser.setNombre(names);
                         nUser.setApellido(lastNames);
                         nUser.setIdentificacion(identifications);
+                        nUser.setLatitud(userLocation.getLatitude());
+                        nUser.setLongit(userLocation.getLongitude());
 
                         if(ivUserIcon != null){
                             StorageReference profilePhoto = storage.child(PATH_USERS + "profile_pictures/" + user.getUid() + ".jpg");
@@ -265,6 +376,10 @@ public class SingupActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+        else if(request_code == MAPS_PERMISSION_ID)
+        {
+            startLocationUpdates();
+        }
     }
 
     @Override
@@ -283,6 +398,7 @@ public class SingupActivity extends AppCompatActivity {
         }
         if(requestCode == MAPS_PERMISSION_ID){
             if(PermissionManager.checkPermission(this, MAPS_NAME)){
+                initView();
                 register();
             }
         }
