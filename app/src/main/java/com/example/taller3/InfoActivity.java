@@ -261,6 +261,7 @@ public class InfoActivity extends FragmentActivity implements OnMapReadyCallback
                         distancia.setText(Double.toString(distanc) + " KM");
                     }
                 } else {
+                    Toast.makeText(InfoActivity.this, "Usuario "+friendU.getNombre()+" desconectado, no se haran mas actualizaciones", Toast.LENGTH_SHORT).show();
                 }
 
             }

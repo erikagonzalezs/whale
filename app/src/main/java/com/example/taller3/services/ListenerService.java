@@ -59,7 +59,7 @@ public class ListenerService extends JobIntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(UsersActivity.TAG, "EN EL ON CREATE");
+
         database = FirebaseDatabase.getInstance();
         mAuth = FirebaseAuth.getInstance();
         myRef = database.getReference(References.PATH_USERS);
@@ -73,7 +73,6 @@ public class ListenerService extends JobIntentService {
                     User u = singleSnapshot.getValue(User.class);
                     usuarios.put(u.getIdentificacion(), u.getEstado());
                     id_users.put(u.getIdentificacion(), singleSnapshot.getKey());
-                    Log.i("USER", u.getNombre());
                 }
             }
 
@@ -86,19 +85,21 @@ public class ListenerService extends JobIntentService {
 
     @Override
     protected void onHandleWork(@NonNull Intent intent) {
-        Log.i(UsersActivity.TAG, "Firebase listener service started");
         vel = myRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 ArrayList<User> cambios = new ArrayList<>();
                 for (DataSnapshot single : snapshot.getChildren()) {
                     User u = single.getValue(User.class);
-                    Log.i("USER for", u.getNombre());
-                    cambios.add(u);
+                    if(!single.getKey().equals(mAuth.getUid()))
+                    {
+                        cambios.add(u);
+                    }
+
                 }
                 for (int i = 0; i < cambios.size(); i++) {
                     if(cambios.get(i).getEstado() != usuarios.get(cambios.get(i).getIdentificacion())){
-                        if (cambios.get(i).getEstado() == true) {
+                        if (cambios.get(i).getEstado() == true ) {
                             nombre = cambios.get(i).getNombre();
                             apellido = cambios.get(i).getApellido();
                             key = id_users.get(cambios.get(i).getIdentificacion());

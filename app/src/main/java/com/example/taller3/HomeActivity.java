@@ -83,7 +83,6 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
     Marker currentposition;
 
     //gps
-    final double RADIUS = 6371.01;
     //settings
     private static final int LOCATION_PERMISSION_ID = 10;
     private static final int SETTINGS_GPS = 10;
@@ -99,7 +98,7 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
     //notification
     public static String CHANNEL_ID = "NOTI_APP";
 
-    private String justificacion = "Se requiere el GPS para acceder a la ubicación";
+    private final String justificacion = "Se requiere el GPS para acceder a la ubicación";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,9 +160,9 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
                     userLocation = location;
 
                     if (change) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
-
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18));
                         change = false;
+
                     }
                 }
             }
@@ -285,6 +284,7 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onRestart() {
         super.onRestart();
+        initView();
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentposition.getPosition(), 12));
     }
 
@@ -345,10 +345,9 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
             Marker mark = mMap.addMarker(new MarkerOptions().position(latLng2).title(locations[i].getName()).icon(BitmapDescriptorFactory.defaultMarker(number)));
 
         }
-        if (userLocation == null) {
-            PermissionManager.request_permission(HomeActivity.this, LOCATION_NAME, justificacion, LOCATION_PERMISSION_ID);
-            initView();
-        }
+        PermissionManager.request_permission(this, LOCATION_NAME, justificacion, LOCATION_PERMISSION_ID);
+        initView();
+
         mMap.getUiSettings().setZoomGesturesEnabled(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
     }
@@ -357,6 +356,17 @@ public class HomeActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onStart() {
         super.onStart();
         startListenerService();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+    private  void stopLocationUpdates()
+    {
+        locationClient.removeLocationUpdates(locationCallback);
+
     }
 
     private void startListenerService(){

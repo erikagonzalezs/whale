@@ -28,7 +28,7 @@ public class LocationManager {
     public final static LocationRequest createLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
+        locationRequest.setFastestInterval(1000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return locationRequest;
     }
